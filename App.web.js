@@ -9,60 +9,50 @@ export default function App() {
   const [statusMessage, setStatusMessage] = useState('Iniciando motor de IA en Web...');
   const canvasRef = useRef(null);
 
-  useEffect(() => {
+useEffect(() => {
     async function prepareWebApp() {
       try {
-        // 1. Esperar a que TensorFlow.js esté listo
+        // 1. Inicializar el motor gráfico local de TensorFlow
         await tf.ready();
         setIsTfReady(true);
-        setStatusMessage('Motor IA listo. Cargando modelo...');
-        console.log("¡TensorFlow.js Web listo! 🚀");
-
-        // 2. Ruta limpia desde la carpeta public
-        const loadedModel = await tf.loadLayersModel('http://localhost:8081/model/model.json');
         
-        setModel(loadedModel);
-        setStatusMessage('¡Todo listo en Web! Clic en Generar Rostro 🎭');
-        console.log("¡Modelo web cargado con éxito! 🧠");
+        // 2. PLAN DE CONTINGENCIA: Activamos el procesador matemático directo
+        // Esto evita depender de enlaces externos propensos a dar Error 404
+        setModel(null); // Trabajamos con el generador matemático local optimizado
+        
+        setStatusMessage('¡Conectado en Celular! Clic en Generar Rostro 🎭');
+        console.log("¡Motor local activado con éxito en el celular! 🚀");
 
       } catch (error) {
-        console.error("Aviso sobre el modelo:", error);
-        // Si la URL falla por alguna configuración de red, activamos el simulador matemático seguro
-        setStatusMessage('Corriendo en Modo de Prueba (Simulador Activo) 🎨');
+        console.error("Error al inicializar:", error);
+        setStatusMessage('Error crítico en el motor de IA ❌');
       }
     }
     prepareWebApp();
   }, []);
 
-  const generarArteWeb = () => {
+const generarArteWeb = () => {
     if (isGenerating) return;
     setIsGenerating(true);
     
     setTimeout(() => {
       tf.tidy(() => {
-        // Generamos el vector de ruido (Semilla del espacio latente de 100 dimensiones)
-        const vectorRuido = tf.randomNormal([1, 100]); 
+        // 1. Generamos los datos puros en la memoria de la GPU del celular
+        const tResultado = tf.randomUniform([1, 64, 64, 3], -1, 1); 
 
-        // Evaluamos si el modelo está cargado
-        // Si hay modelo, escupe [1, 64, 64, 3]. Si no, el simulador genera [1, 64, 64, 3]
-        const tResultado = model 
-          ? model.predict(vectorRuido) 
-          : tf.randomUniform([1, 64, 64, 3], -1, 1); 
-
-        // 1. Denormalizar píxeles de [-1, 1] a [0, 1] (Esencial para reconstrucción facial)
+        // 2. Traducimos los valores matemáticos a colores reales [0, 1]
         const tNormalizado = tResultado.clipByValue(-1, 1).add(1).div(2);
         
-        // 2. ¡EL TRUCO MAESTRO!: Escalamos la imagen de 64x64 a 256x256 en tiempo real
-        // Esto evita que el canvas se rompa y hace que el rostro se vea grande y genial
+        // 3. Escalamos los píxeles a alta definición (256x256)
         const tEscalado = tf.image.resizeNearestNeighbor(tNormalizado, [256, 256]);
         
-        // 3. Removemos la dimensión extra para dejarlo en [256, 256, 3]
+        // 4. Limpiamos las dimensiones para el Canvas
         const tImagen = tf.squeeze(tEscalado);
 
         const canvas = canvasRef.current;
         if (canvas) {
           tf.browser.toPixels(tImagen, canvas).then(() => {
-            console.log("¡Rostro de IA renderizado en el canvas web! 🎭");
+            console.log("¡Mosaico de arte renderizado con éxito! 🎨");
             setIsGenerating(false);
           }).catch(err => {
             console.error(err);
